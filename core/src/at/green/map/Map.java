@@ -1,31 +1,112 @@
 package at.green.map;
 
-import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Map {
+import at.green.camera.GameCamera;
 
-	private int width;
-	private int height;
-	int numberIterations;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+
+public class Map extends TiledMap{
+
+	private int columns;
+	private int rows;
+	private int totalWidth;
+	private int totalHeight;
+	private int tileWidth;
+	private int tileHeight;
+	
+	private TiledMap tiledMap;
 	private TileType[][] tiles;
 	private List<RuleSet> rules;
-
-	public Map(int width, int height, int numberIterations, List<RuleSet> rules) {
-		this.width = width;
-		this.height = height;
-		tiles = new TileType[width][height];
-		this.rules = rules;
-		this.numberIterations = numberIterations;
-	}
-
-	//TODO remove / cleanup
-	public TileType[][] getTiles(){
-		return tiles;
+	private int numberIterations;
+	
+	private TiledMapRenderer renderer;
+	
+	//TODO remove tiles array, streamline process buildEnvironment -> buildTiledMap
+	
+	public Map(boolean isOrthogonal){
+		this.rules = new ArrayList<RuleSet>();
+		rules.add(new RuleSet(0.5f, 4, 3));
+		this.columns = 100;
+		this.rows = 100;
+		this.tileWidth = 64;
+		this.tileHeight = 64;
+		this.totalWidth = columns * tileWidth;
+		this.totalHeight = rows * tileHeight;
+		this.tiles = new TileType[columns][rows];
+		this.numberIterations = 3;
+		
+		if(isOrthogonal){
+			this.tiledMap = new TmxMapLoader().load("map2.tmx");
+			this.renderer = new OrthogonalTiledMapRenderer(this.tiledMap);
+		}
+		else{
+			this.tiledMap = new TmxMapLoader().load("map1.tmx");
+			this.renderer = new IsometricTiledMapRenderer(this.tiledMap);
+		}
+		buildEnvironment();
+		buildTiledMap();
 	}
 	
-	public boolean buildNewMap() {
+	public int getTileWidth() {
+		return tileWidth;
+	}
+
+	public int getTileHeight() {
+		return tileHeight;
+	}
+
+	public Map(int columns, int rows, int numberIterations, List<RuleSet> rules, boolean isOrthogonal) {
+		this.columns = columns;
+		this.rows = rows;
+		this.totalWidth = columns * tileWidth;
+		this.totalHeight = rows * tileHeight;
+		this.tiles = new TileType[columns][rows];
+		this.rules = rules;
+		this.numberIterations = numberIterations;
+		
+		
+		if(isOrthogonal){
+			this.tiledMap = new TmxMapLoader().load("map2.tmx");
+			this.renderer = new OrthogonalTiledMapRenderer(this.tiledMap);
+		}
+		else{
+			this.tiledMap = new TmxMapLoader().load("map1.tmx");
+			this.renderer = new IsometricTiledMapRenderer(this.tiledMap);
+		}
+		buildEnvironment();
+		buildTiledMap();
+	}
+	
+	public void render(GameCamera camera){
+		renderer.setView(camera);
+		renderer.render();
+	}
+	
+	public void buildTiledMap(){
+		TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get(1);
+		TiledMapTileLayer.Cell wall = layer.getCell(0,0);
+		TiledMapTileLayer.Cell floor = layer.getCell(1,1);
+		
+		for(int x = 0;x < 100;x++){
+			for(int y = 0;y < 100;y++){
+				if(this.tiles[x][y] == TileType.Floor){
+					layer.setCell(x,y,floor);
+				}else{
+					layer.setCell(x,y,wall);
+				}
+			}
+		}
+	}
+	
+	private boolean buildEnvironment() {
 		if (rules == null) {
 			return false;
 		}
@@ -49,8 +130,8 @@ public class Map {
 
 	private void initMap(RuleSet currentRules) {
 		Random random = new Random();
-		for (int x = 0; x < this.width; x++) {
-			for (int y = 0; y < this.height; y++) {
+		for (int x = 0; x < this.columns; x++) {
+			for (int y = 0; y < this.rows; y++) {
 				if (currentRules.chanceToStartAsWall > random.nextFloat()) {
 					this.tiles[x][y] = TileType.Wall;
 				} else {
@@ -64,8 +145,8 @@ public class Map {
 	private void nextIteration(RuleSet currentRules) {
 		TileType[][] newGrid = copyGrid(this.tiles);
 		// Array.Copy(this.tiles, 0, newGrid, 0, this.tiles.length);
-		for (int x = 0; x < this.width; x++) {
-			for (int y = 0; y < this.height; y++) {
+		for (int x = 0; x < this.columns; x++) {
+			for (int y = 0; y < this.rows; y++) {
 				if (isEdge(x, y)) {
 					newGrid[x][y] = TileType.Wall;
 				} else {
@@ -172,7 +253,6 @@ public class Map {
 	}
 	*/
 	
-	
 	private int getNeigbouringWallsCount(int posX, int posY) {
 		int count = 0;
 		for (int i = -1; i < 2; i++) {
@@ -182,8 +262,8 @@ public class Map {
 				if (i == 0 && j == 0) {
 					// do not count current tile
 				} else if (neighbourX < 0 || neighbourY < 0
-						|| neighbourX >= this.width
-						|| neighbourY >= this.height) {
+						|| neighbourX >= this.columns
+						|| neighbourY >= this.rows) {
 					count++;
 				} else if (this.tiles[neighbourX][neighbourY] == tiles[posX][posY]) {
 					count++;
@@ -194,8 +274,8 @@ public class Map {
 	}
 	
 	private void smoothWalls() {
-		for (int x = 0; x < this.width; x++) {
-			for (int y = 0; y < this.height; y++) {
+		for (int x = 0; x < this.columns; x++) {
+			for (int y = 0; y < this.rows; y++) {
 
 				if (tiles[x][y] != TileType.Floor) {
 					int walls = 0;
@@ -212,7 +292,7 @@ public class Map {
 						}
 					}
 					
-					if(x + 1 < this.width){
+					if(x + 1 < this.columns){
 						if (tiles[x + 1][y] == TileType.Floor) {
 							walls += E;
 						}
@@ -224,7 +304,7 @@ public class Map {
 						}
 					}
 					
-					if(y + 1 < this.height){
+					if(y + 1 < this.rows){
 						if (tiles[x][y + 1] == TileType.Floor) {
 							walls += S;
 						}
@@ -279,10 +359,10 @@ public class Map {
 	}
 
 	private boolean isEdge(int posX, int posY) {
-		if (posX == 0 || posX == this.width - 1) {
+		if (posX == 0 || posX == this.columns - 1) {
 			return true;
 		}
-		if (posY == 0 || posY == this.height - 1) {
+		if (posY == 0 || posY == this.rows - 1) {
 			return true;
 		}
 		return false;
@@ -344,4 +424,19 @@ public class Map {
 				return 'x';
 		}
 	}
+
+	
+	public int getWidth() {
+		return this.totalWidth;
+	}
+
+
+	public int getHeight() {
+		return this.totalHeight;
+	}
+	
+	public TileType[][] getTiles(){
+		return this.tiles;
+	}
+
 }

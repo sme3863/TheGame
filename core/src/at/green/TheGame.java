@@ -4,14 +4,20 @@ import at.green.screen.SplashScreen;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.GdxNativesLoader;
 
 public class TheGame extends Game {
 
 	private int width = 0;
 	private int height = 0;
-	@Override
 	
+	
+	@Override
 	public void create () {
+		
+		GdxNativesLoader.load();
+		
+		//allow images that are not a power of 2
 		//Texture.setEnforcePotImages(false);
 		//FULLSCREEN
 		Gdx.graphics.setDisplayMode(Gdx.graphics.getDesktopDisplayMode().width, Gdx.graphics.getDesktopDisplayMode().height, true);

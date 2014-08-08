@@ -1,13 +1,14 @@
 package at.green.screen;
 
 import at.green.TheGame;
+import at.green.utils.Timers;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.TimeUtils;
 
 public class SplashScreen implements Screen{
 
@@ -15,10 +16,13 @@ public class SplashScreen implements Screen{
 	private SpriteBatch spriteBatch;
 	private Texture splash;
 	private TheGame game;
-	private long startTime;
+	private boolean keyPressed = false;
+	String timerName = "splash";
 	
 	public SplashScreen(TheGame game) {
 		this.game = game;
+		Gdx.input.setInputProcessor(new SplashScreenInput());
+		
 	}
 
 	@Override
@@ -29,10 +33,13 @@ public class SplashScreen implements Screen{
 		spriteBatch.draw(splash, 0, 0, game.getWidth(), game.getHeight());
 		spriteBatch.end();
 
-		if(TimeUtils.millis() - startTime >= 2000){
+		if(Timers.matchThenRemove(timerName) || keyPressed){
 			this.game.setScreen(new MainMenuScreen(this.game));
 		}
-		
+	}
+	
+	public void setKeyPressed(){
+		this.keyPressed = true;
 	}
 
 	@Override
@@ -44,7 +51,8 @@ public class SplashScreen implements Screen{
 	public void show() {
 		spriteBatch = new SpriteBatch();
 		splash = new Texture(Gdx.files.internal("splash.png"));
-		startTime = TimeUtils.millis();
+		timerName = Timers.createTimer(timerName,2000);
+		Timers.startTimer(timerName);
 	}
 
 	@Override
@@ -68,6 +76,59 @@ public class SplashScreen implements Screen{
 	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
+		
+	}
+	
+	private class SplashScreenInput implements InputProcessor {
+
+
+		@Override
+		public boolean keyDown(int keycode) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean keyUp(int keycode) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean keyTyped(char character) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean touchDown(int screenX, int screenY, int pointer,
+				int button) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean touchDragged(int screenX, int screenY, int pointer) {
+			setKeyPressed();
+			return false;
+		}
+
+		@Override
+		public boolean mouseMoved(int screenX, int screenY) {
+			return false;
+		}
+
+		@Override
+		public boolean scrolled(int amount) {
+			return false;
+		}
+		
 		
 	}
 }
