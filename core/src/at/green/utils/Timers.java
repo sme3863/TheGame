@@ -35,5 +35,10 @@ public class Timers {
 			t.matchThenRemove();
 		}
 	}
+
+	public static void reset(String string) {
+		timers.get(string).start();
+		
+	}
 	
 }

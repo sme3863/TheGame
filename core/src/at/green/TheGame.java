@@ -20,7 +20,7 @@ public class TheGame extends Game {
 		//allow images that are not a power of 2
 		//Texture.setEnforcePotImages(false);
 		//FULLSCREEN
-		Gdx.graphics.setDisplayMode(Gdx.graphics.getDesktopDisplayMode().width, Gdx.graphics.getDesktopDisplayMode().height, true);
+//		Gdx.graphics.setDisplayMode(Gdx.graphics.getDesktopDisplayMode().width, Gdx.graphics.getDesktopDisplayMode().height, true);
 		Gdx.graphics.setVSync(true);
 		this.width = Gdx.graphics.getDesktopDisplayMode().width;
 		this.height = Gdx.graphics.getDesktopDisplayMode().height;

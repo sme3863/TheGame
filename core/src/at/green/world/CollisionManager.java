@@ -3,6 +3,7 @@ package at.green.world;
 import java.util.ArrayList;
 import java.util.List;
 
+import at.green.entity.Dummy;
 import at.green.entity.Entity;
 import at.green.map.Map;
 import at.green.map.TileType;
@@ -33,6 +34,19 @@ public class CollisionManager {
 		}
 		
 	}
+	
+	//TODO REMOVE //////////////////////
+	public static void moveNPCs(boolean change){
+		for(Entity e: collisionEntities){
+			Dummy d = (Dummy)e;
+			d.update(change);
+		}
+	}
+	
+	public static List<Entity> getEntities(){
+		return collisionEntities;
+	}
+	///////////////////////////////////
 	
 	
 	public static void addCollisionMapObject(CollisionShape shape){
